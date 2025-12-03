@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import AdminNavbar from "./AdminNavbar";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({});
@@ -22,23 +21,23 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <AdminNavbar />
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white p-6 rounded-xl shadow">
-            <p className="text-gray-600">Total Pandits</p>
-            <h2 className="text-3xl font-semibold">{stats.totalPandits}</h2>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow">
-            <p className="text-gray-600">Pending Requests</p>
-            <h2 className="text-3xl font-semibold">{stats.pendingPandits}</h2>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow">
-            <p className="text-gray-600">Total Earnings</p>
-            <h2 className="text-3xl font-semibold">₹{stats.totalEarnings}</h2>
-          </div>
+    <div className="w-full">
+      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-6 rounded-xl shadow">
+          <p className="text-gray-600">Total Pandits</p>
+          <h2 className="text-3xl font-semibold">{stats.totalPandits}</h2>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow">
+          <p className="text-gray-600">Pending Requests</p>
+          <h2 className="text-3xl font-semibold">{stats.pendingPandits}</h2>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow">
+          <p className="text-gray-600">Total Earnings</p>
+          <h2 className="text-3xl font-semibold">₹{stats.totalEarnings}</h2>
         </div>
       </div>
     </div>

@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema(
       sparse: true,
     },
 
+    walletBalance: {
+      type: Number,
+      default: 0,
+    },
+
     address: { type: String, trim: true, maxlength: 150 },
     dateOfBirth: { type: Date },
     placeOfBirth: { type: String, trim: true },

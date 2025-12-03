@@ -1,11 +1,9 @@
 import API from "../services/api";
 
 export async function logout() {
-  console.log("🔥 logout() called!");
-  console.trace();
-  console.log("🟥 LOGOUT TRIGGERED — route:", window.location.pathname);
   try {
     const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
 
     if (token) {
       await API.post(
@@ -13,32 +11,30 @@ export async function logout() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log("✔ Backend updated isLoggedIn=false");
     }
+
+    // Clear everything
+    localStorage.clear();
+
+    // Redirect based on role
+    if (role === "pandit") {
+      window.location.href = "/pandit/login";
+    } else if (role === "admin") {
+      window.location.href = "/admin/login";
+    } else {
+      window.location.href = "/login"; // user
+    }
+
   } catch (err) {
     console.warn("⚠️ Backend logout failed:", err.message);
-  }
-
-  // Read role BEFORE clearing
-  const role = localStorage.getItem("role");
-
-  // Clear all tokens and session data
-  localStorage.clear();
-
-  // Role-based redirect (🔥 FIX)
-  if (role === "pandit") {
-    window.location.href = "/pandit/login";
-  } else if (role === "admin") {
-    window.location.href = "/admin/login";
-  } else {
-    window.location.href = "/user/login";
+    localStorage.clear();
+    window.location.href = "/login";
   }
 }
 
 export function isTokenExpired() {
   const expiry = localStorage.getItem("tokenExpiry");
-
-  // Not logged in → not expired
   if (!expiry) return false;
-
   return Date.now() > parseInt(expiry);
 }

@@ -130,7 +130,7 @@ const Navbar = () => {
         {/* Links */}
         <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
           <Link to="/">Home</Link>
-          <Link to="/pandit">Pandits</Link>
+          <Link to="/pandits">Pandits</Link>
           <Link to="/horoscope">Horoscope</Link>
           <Link to="/contact">Contact</Link>
 

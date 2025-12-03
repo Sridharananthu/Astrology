@@ -1,30 +1,22 @@
 import Pandit from "../models/Pandit.js";
 import ChatSession from "../models/chat.js";
+import ChatRequest from "../models/ChatRequest.js";
 import generateToken from "../utils/generateToken.js";
 
-/* =========================================================
-     TEMP In-Memory Status Storage (Defined at TOP)
-   ========================================================= */
-let panditStatuses = {}; // { panditId: true/false }
-
-
-
-/* =========================================================
-     REGISTER PANDIT
-   ========================================================= */
+/* ============================================================
+   REGISTER PANDIT
+============================================================ */
 export const registerPandit = async (req, res) => {
   try {
-    console.log("📥 Incoming Registration Data:", req.body);
-    console.log("🖼 Uploaded file:", req.file?.filename);
+    const { name, dob, gender, languages, skills, otherSkill, email, password } =
+      req.body;
 
-    const { name, dob, gender, languages, skills, otherSkill, email } = req.body;
-
-    if (!name || !dob || !gender || !languages || !skills || !email) {
+    if (!name || !dob || !gender || !languages || !skills || !email || !password) {
       return res.status(400).json({ success: false, message: "All required fields must be filled" });
     }
 
-    const existingPandit = await Pandit.findOne({ email });
-    if (existingPandit) {
+    const existing = await Pandit.findOne({ email });
+    if (existing) {
       return res.status(400).json({ success: false, message: "Email already registered" });
     }
 
@@ -42,226 +34,239 @@ export const registerPandit = async (req, res) => {
       skills: parsedSkills,
       otherSkill,
       email,
+      password,
       status: "pending",
       createdByAdmin: false,
       isVerified: false,
+      isOnline: false,
     });
 
     if (req.file) pandit.image = `/uploads/${req.file.filename}`;
 
     await pandit.save();
 
-    console.log("✅ Pandit Registered:", pandit.email);
-
     return res.status(201).json({
       success: true,
       message: "Registration successful! Await admin approval.",
-      data: {
-        _id: pandit._id,
-        name: pandit.name,
-        email: pandit.email,
-        image: pandit.image,
-        status: pandit.status,
-      },
+      data: pandit,
     });
-  } catch (error) {
-    console.error("❌ Error in registerPandit:", error);
-    return res.status(500).json({ success: false, message: "Server error", error: error.message });
+  } catch (err) {
+    console.error("❌ registerPandit:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 
-
-/* =========================================================
-     LOGIN PANDIT  (FIXED)
-   ========================================================= */
+/* ============================================================
+   LOGIN PANDIT
+============================================================ */
 export const loginPandit = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
-    }
-
     const pandit = await Pandit.findOne({ email }).select("+password");
     if (!pandit) {
-      return res.status(404).json({
-        success: false,
-        message: "Pandit not found",
-      });
+      return res.status(404).json({ success: false, message: "Pandit not found" });
     }
 
     const isMatch = await pandit.matchPassword(password);
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
+      return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
     const token = generateToken(pandit._id, "pandit");
 
-    console.log(`🔥 Pandit Logged In: ${pandit.email}`);
+    const panditData = pandit.toObject();
+    delete panditData.password;
 
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Login successful",
       token,
-      data: {
-        _id: pandit._id,
-        name: pandit.name,
-        email: pandit.email,
-        role: pandit.role,
-        image: pandit.image || null,
-        status: pandit.status,
-      },
+      data: panditData,
     });
-
-  } catch (error) {
-    console.error("❌ Error in loginPandit:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Login failed",
-      error: error.message,
-    });
+  } catch (err) {
+    console.error("❌ loginPandit:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 
-
-/* =========================================================
-     GET ALL PANDITS
-   ========================================================= */
+/* ============================================================
+   GET ALL PANDITS
+============================================================ */
 export const getAllPandits = async (req, res) => {
   try {
-    const pandit = await Pandit.find().select("-password");
+    const pandits = await Pandit.find().select(
+      "name image languages skills experience status isOnline currentSession rate"
+    );
 
-    return res.status(200).json({
+    res.json({
       success: true,
-      count: pandit.length,
-      pandit,
+      pandit: pandits,
+      count: pandits.length,
     });
-
-  } catch (error) {
-    console.error("❌ Error fetching pandit:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
+  } catch (err) {
+    console.error("❌ getAllPandits:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 
-
-/* =========================================================
-     PANDIT DASHBOARD (FIXED — All inside try block)
-   ========================================================= */
+/* ============================================================
+   GET PANDIT DASHBOARD
+============================================================ */
 export const getPanditDashboard = async (req, res) => {
   try {
     const panditId = req.params.id;
 
-    const dashboardData = {
+    const pandit = await Pandit.findById(panditId).select("-password");
+    if (!pandit) {
+      return res.status(404).json({ success: false, message: "Pandit not found" });
+    }
+
+    const sessions = await ChatSession.find({ panditId }).populate("userId", "name email");
+
+    const recentOrders = sessions.map((session) => ({
+      id: session._id,
+      userId: session.userId._id,
+      client: session.userId.name,
+      email: session.userId.email,
+      status: session.isActive ? "Active" : "Closed",
+      date: new Date(session.updatedAt).toLocaleDateString(),
+    }));
+
+    return res.json({
       success: true,
-      panditId,
-
-      earnings: {
-        today: 120,
-        total: 5400,
-        wallet: 800,
-      },
-
-      profile: {
-        completion: 75,
-        isOnline: panditStatuses[panditId] ?? false,
-      },
-
-      requests: [
-        {
-          id: "req101",
-          user: "Amit Sharma",
-          type: "chat",
-          time: new Date().toISOString(),
-        },
-        {
-          id: "req102",
-          user: "Priya",
-          type: "call",
-          time: new Date().toISOString(),
-        },
-      ],
-
-      activeSessions: [
-        {
-          sessionId: "sess001",
-          user: "Rohan",
-          type: "call",
-          startedAt: new Date(Date.now() - 5 * 60000),
-        },
-      ],
-
-      recentTransactions: [
-        {
-          id: "txn201",
-          amount: 50,
-          type: "chat",
-          time: new Date().toISOString(),
-        },
-        {
-          id: "txn202",
-          amount: 30,
-          type: "call",
-          time: new Date().toISOString(),
-        },
-      ],
-
-      recentHistory: [
-        {
-          user: "Amit",
-          type: "chat",
-          duration: 10,
-          time: new Date().toISOString(),
-        },
-        {
-          user: "Kunal",
-          type: "call",
-          duration: 7,
-          time: new Date().toISOString(),
-        },
-      ],
-    };
-
-    return res.json(dashboardData);
-
-  } catch (error) {
-    console.error("Dashboard Error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+      pandit,
+      recentOrders,
+    });
+  } catch (err) {
+    console.error("❌ getPanditDashboard:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 
-
-/* =========================================================
-     UPDATE ONLINE/OFFLINE STATUS
-   ========================================================= */
-export const updatePanditStatus = async (req, res) => {
+/* ============================================================
+   UPDATE ONLINE STATUS
+============================================================ */
+export const updatePanditOnlineStatus = async (req, res) => {
   try {
     const panditId = req.params.id;
     const { isOnline } = req.body;
 
-    panditStatuses[panditId] = isOnline;
+    const pandit = await Pandit.findById(panditId);
+    if (!pandit) return res.status(404).json({ success: false, message: "Pandit not found" });
 
-    return res.json({
+    pandit.isOnline = !!isOnline;
+    await pandit.save();
+
+    // Emit to all connected clients
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("pandit_status_update", {
+        panditId: pandit._id.toString(),
+        isOnline: pandit.isOnline,
+        currentSession: pandit.currentSession || null,
+      });
+    }
+
+    res.json({
       success: true,
-      panditId,
-      isOnline,
       message: `Status updated to ${isOnline ? "Online" : "Offline"}`,
+      isOnline: pandit.isOnline,
+    });
+  } catch (err) {
+    console.error("❌ updatePanditOnlineStatus:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+/* ============================================================
+   ⭐ GET PANDIT CHAT REQUESTS
+============================================================ */
+export const getPanditRequests = async (req, res) => {
+  try {
+    const panditId = req.params.id;
+
+    const requests = await ChatRequest.find({
+      panditId,
+      accepted: false,
+    })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: requests.map((req) => ({
+        _id: req._id,
+        user: req.userId,
+        userId: req.userId?._id,
+        roomId: req.roomId,
+        createdAt: req.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error("❌ getPanditRequests:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const deleteChatRequest = async (req, res) => {
+  try {
+    const { roomId } = req.body; // frontend sends the roomId
+
+    if (!roomId) {
+      return res.status(400).json({ success: false, message: "roomId is required" });
+    }
+
+    const deleted = await ChatRequest.findOneAndDelete({ roomId });
+
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: "Request not found" });
+    }
+
+    res.json({ success: true, message: "Chat request removed successfully" });
+  } catch (err) {
+    console.error("❌ deleteChatRequest:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+/* ============================================================
+   UPDATE SESSION STATUS
+   (chat/call/null) — used to mark busy/free and emit realtime
+============================================================ */
+export const updatePanditSessionStatus = async (req, res) => {
+  try {
+    const panditId = req.params.id;
+    const { status } = req.body;
+
+    const pandit = await Pandit.findById(panditId);
+    if (!pandit) {
+      return res.status(404).json({ success: false, message: "Pandit not found" });
+    }
+
+    pandit.currentSession = status || null;
+    await pandit.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("pandit_status_update", {
+        panditId: pandit._id.toString(),
+        isOnline: pandit.isOnline,
+        currentSession: pandit.currentSession,
+      });
+    }
+
+    res.json({
+      success: true,
+      currentSession: pandit.currentSession,
     });
   } catch (error) {
-    console.error("❌ Error in updatePanditStatus:", error);
-    return res.status(500).json({ error: "Unable to update status" });
+    console.error("updatePanditSessionStatus error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

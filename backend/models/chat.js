@@ -33,8 +33,6 @@ const chatSessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Define the model
 const ChatSession = mongoose.model("ChatSession", chatSessionSchema);
 
-// ✅ Export it as default (so `import ChatSession from "../models/chat.js"` works)
 export default ChatSession;

@@ -4,7 +4,7 @@ import { loginAdmin } from "../controllers/adminController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 import Pandit from "../models/Pandit.js";
-import Transaction from "../models/Transaction.js";
+import Transaction from "../models/WalletTransaction.js";
 
 const router = express.Router();
 

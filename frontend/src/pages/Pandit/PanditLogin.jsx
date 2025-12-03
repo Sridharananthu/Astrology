@@ -15,7 +15,6 @@ const PanditLogin = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log("✔ LOGIN SUCCESS:", res);
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -23,7 +22,7 @@ const PanditLogin = () => {
     try {
       const res = await loginPandit(formData);
 
-      console.log("🔵 LOGIN RESPONSE:", res);
+      console.log("PANDIT LOGIN RESPONSE:", res);
 
       if (res?.success) {
         const { token, data: pandit } = res;
@@ -33,8 +32,7 @@ const PanditLogin = () => {
         localStorage.setItem("panditId", pandit._id);
         localStorage.setItem("pandit", JSON.stringify(pandit));
 
-        console.log("🔵 LOGIN RESPONSE:", res);
-        // navigate("/pandit/dashboard");
+        navigate("/pandit/home");
       } else {
         setError("Invalid login response. Please try again.");
       }
@@ -58,13 +56,14 @@ const PanditLogin = () => {
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5" method="POST">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-white text-sm mb-1">Email</label>
             <input
               type="email"
               name="email"
               placeholder="Enter your registered email"
+              autoComplete="email"
               value={formData.email}
               onChange={handleChange}
               className="w-full p-2 text-white rounded-lg bg-[#0b0f29] border border-[#2e3261] focus:border-[#d4af37] outline-none"
@@ -78,6 +77,7 @@ const PanditLogin = () => {
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Enter password"
+              autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
               className="w-full p-2 pr-10 text-white rounded-lg bg-[#0b0f29] border border-[#2e3261] focus:border-[#d4af37] outline-none"

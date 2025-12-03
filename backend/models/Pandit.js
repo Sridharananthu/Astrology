@@ -41,6 +41,18 @@ const panditSchema = new mongoose.Schema(
     createdByAdmin: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
 
+    currentSession: { type: String, default: null }, // "chat" | "call" | null
+
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+
+    rate: {
+      type: Number,
+      default: 5,
+    },
+
     /* 🧩 -------- Admin Portal Extensions -------- */
     approved: { type: Boolean, default: false }, // redundant but useful for admin filters
     credentials: {

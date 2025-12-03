@@ -2,11 +2,13 @@ import { Routes, Route } from "react-router-dom";
 
 import PanditLogin from "../pages/Pandit/PanditLogin.jsx";
 import PanditRegister from "../pages/Pandit/PanditRegister.jsx";
-import PanditDashboard from "../pages/Pandit/PanditDashboard.jsx";
+import PanditHome from "../pages/Pandit/PanditHome.jsx";
+import PanditSessions from "../pages/Pandit/PanditSessions.jsx"
+import PanditChatRequests from "../pages/Pandit/PanditChatRequests.jsx";
+import PanditChat from "../pages/Pandit/PanditChat.jsx";
 import PanditWallet from "../pages/Pandit/PanditWallet.jsx";
+// import PanditProfile from "../pages/Pandit/PanditProfile.jsx";
 import PanditChangePassword from "../pages/Pandit/PanditChangePassword.jsx";
-// import ChatPandit from "../pages/Pandit/ChatPandit.jsx";
-import ChatBox from "../pages/Pandit/Pandit_chatbox.jsx";
 
 import ProtectedPandit from "./ProtectedPandit.jsx";
 import PanditLayout from "../layouts/PanditLayout.jsx";
@@ -21,11 +23,13 @@ export default function PanditRoutes() {
       {/* Protected */}
       <Route element={<ProtectedPandit />}>
         <Route element={<PanditLayout />}>
-          <Route path="dashboard" element={<PanditDashboard />} />
+          <Route path="home" element={<PanditHome />} />
+          <Route path="sessions" element={<PanditSessions />}/>
+          <Route path="requests" element={<PanditChatRequests />} />
+          <Route path="chat/:userId" element={<PanditChat />} />
           <Route path="wallet" element={<PanditWallet />} />
+          {/* <Route path="profile" element={<PanditProfile />} /> */}
           <Route path="changepassword" element={<PanditChangePassword />} />
-          {/* <Route path="chat" element={<ChatPandit />} /> */}
-          <Route path="chat/:userId" element={<ChatBox />} />
         </Route>
       </Route>
     </Routes>
