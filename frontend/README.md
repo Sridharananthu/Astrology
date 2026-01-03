@@ -7,6 +7,7 @@ It enables:
 - 🧑‍💼 **Admins** to manage users, pandit, and transactions via a powerful dashboard.
 
 ---
+the project was developed by team kanayarashi!
 
 ## Pandit Data
 {

@@ -1,37 +1,41 @@
-// // src/routes/adminRoutes.jsx
-// import React from "react";
-// import { Routes, Route } from "react-router-dom";
-// import AdminLoginPage from "../pages/Admin/AdminLogin.jsx";
-// import AdminLayout from "../components/AdminComponents/AdminLayout.jsx";
+// import { Routes, Route, Navigate } from "react-router-dom";
+
+// import AdminLogin from "../pages/Admin/AdminLogin.jsx";
 // import Dashboard from "../pages/Admin/AdminDashboard.jsx";
 // import ManagePandits from "../pages/Admin/ManagePandits.jsx";
 // import ManageUsers from "../pages/Admin/ManageUsers.jsx";
 // import Transactions from "../pages/Admin/Transactions.jsx";
 // import Settings from "../pages/Admin/Settings.jsx";
 
-// const AdminRoutes = () => {
+// import ProtectedAdmin from "./ProtectedAdmin.jsx";
+// import AdminLayout from "../layouts/AdminLayout.jsx";
+
+// export default function AdminRoutes() {
 //   return (
 //     <Routes>
-//       {/* ✅ Admin Login Route */}
-//       <Route path="/admin/login" element={<AdminLoginPage />} />
 
-//       {/* ✅ Admin Protected Layout with Nested Routes */}
-//       <Route path="/admin" element={<AdminLayout />}>
-//         <Route index element={<Dashboard />} />            {/* /admin */}
-//         <Route path="dashboard" element={<Dashboard />} /> {/* /admin/dashboard */}
-//         <Route path="pandit" element={<ManagePandits />} />
-//         <Route path="users" element={<ManageUsers />} />
-//         <Route path="transactions" element={<Transactions />} />
-//         <Route path="settings" element={<Settings />} />
+//       {/* Public Login Route */}
+//       <Route path="login" element={<AdminLogin />} />
+
+//       {/* Protected Routes */}
+//       <Route element={<ProtectedAdmin />}>
+//         <Route element={<AdminLayout />}>
+
+//           {/* Default Route → Dashboard */}
+//           <Route index element={<Navigate to="dashboard" replace />} />
+
+//           <Route path="dashboard" element={<Dashboard />} />
+//           <Route path="pandit" element={<ManagePandits />} />
+//           <Route path="users" element={<ManageUsers />} />
+//           <Route path="transactions" element={<Transactions />} />
+//           <Route path="settings" element={<Settings />} />
+
+//         </Route>
 //       </Route>
 //     </Routes>
 //   );
-// };
-
-// export default AdminRoutes;
-
-
-import { Routes, Route } from "react-router-dom";
+// }
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminLogin from "../pages/Admin/AdminLogin.jsx";
 import Dashboard from "../pages/Admin/AdminDashboard.jsx";
@@ -40,25 +44,23 @@ import ManageUsers from "../pages/Admin/ManageUsers.jsx";
 import Transactions from "../pages/Admin/Transactions.jsx";
 import Settings from "../pages/Admin/Settings.jsx";
 
-import ProtectedAdmin from "./ProtectedAdmin.jsx";
 import AdminLayout from "../layouts/AdminLayout.jsx";
 
 export default function AdminRoutes() {
   return (
     <Routes>
-      {/* Public */}
-      <Route path="login" element={<AdminLogin />} />
-
-      {/* Protected */}
-      <Route element={<ProtectedAdmin />}>
-        <Route element={<AdminLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="pandit" element={<ManagePandits />} />
-          <Route path="users" element={<ManageUsers />} />
-          <Route path="transactions" element={<Transactions />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
+      {/* Default Admin Layout - NO PROTECTION */}
+      <Route element={<AdminLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="pandit" element={<ManagePandits />} />
+        <Route path="users" element={<ManageUsers />} />
+        <Route path="transactions" element={<Transactions />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
+
+      {/* Optional: login page, but not used */}
+      <Route path="login" element={<AdminLogin />} />
     </Routes>
   );
 }

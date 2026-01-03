@@ -6,19 +6,32 @@ const API = axios.create({
 });
 
 // ---------------------------------------------
-// REQUEST INTERCEPTOR (attach token)
+// REQUEST INTERCEPTOR (attach correct token)
 // ---------------------------------------------
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    const role = localStorage.getItem("role");
+
+    let token = null;
+
+    if (role === "admin") {
+      token = localStorage.getItem("adminToken");
+    } else {
+      // user or pandit uses normal token
+      token = localStorage.getItem("token");
+    }
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
 // ---------------------------------------------
-// RESPONSE INTERCEPTOR (handle 401 correctly)
+// RESPONSE INTERCEPTOR (handle 401 & redirect)
 // ---------------------------------------------
 API.interceptors.response.use(
   (response) => response,
@@ -26,26 +39,26 @@ API.interceptors.response.use(
     const url = error.config?.url;
     const status = error.response?.status;
 
-    // Routes that should NOT trigger logout
     const isLoginRoute =
       url === "/auth/login" ||
       url === "/pandit/login" ||
       url === "/admin/login";
 
+    // If unauthorized and NOT login route => logout and redirect
     if (status === 401 && !isLoginRoute) {
-      // Remove token
-      localStorage.removeItem("token");
-
-      // Determine role
       const role = localStorage.getItem("role");
 
-      // Redirect based on role
+      // clear all tokens safely
+      localStorage.removeItem("token");
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("role");
+
       if (role === "pandit") {
         window.location.href = "/pandit/login";
       } else if (role === "admin") {
         window.location.href = "/admin/login";
       } else {
-        window.location.href = "/login";
+        window.location.href = "/login"; // user
       }
     }
 

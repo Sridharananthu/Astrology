@@ -32,6 +32,36 @@ export async function logout() {
     window.location.href = "/login";
   }
 }
+// ----------------------------
+// ADMIN AUTH HELPERS
+// ----------------------------
+
+const ADMIN_TOKEN_KEY = "adminToken";
+const ADMIN_INFO_KEY = "adminInfo";
+
+// store admin token & info
+export function setAdminToken(token, admin = null) {
+  localStorage.setItem(ADMIN_TOKEN_KEY, token);
+  localStorage.setItem("role", "admin");
+  if (admin) localStorage.setItem(ADMIN_INFO_KEY, JSON.stringify(admin));
+}
+
+// get admin token
+export function getAdminToken() {
+  return localStorage.getItem(ADMIN_TOKEN_KEY);
+}
+
+// remove admin token
+export function removeAdminToken() {
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  localStorage.removeItem(ADMIN_INFO_KEY);
+}
+
+// get admin details
+export function getAdminInfo() {
+  const data = localStorage.getItem(ADMIN_INFO_KEY);
+  return data ? JSON.parse(data) : null;
+}
 
 export function isTokenExpired() {
   const expiry = localStorage.getItem("tokenExpiry");
